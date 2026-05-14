@@ -277,6 +277,7 @@ document.addEventListener('click', (e) => {
 /* ==========================================================================
    SUBMIT DATA SYSTEM
    ========================================================================== */
+const submitButton = document.getElementById('submit');
 submitButton.addEventListener('click', async () => {
 
   // ตรวจสอบโหมด
