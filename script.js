@@ -315,27 +315,75 @@ submitBtn.addEventListener('click', async () => {
 /* ==========================================================================
    ADMIN LOGIN & LOGOUT SYSTEM
    ========================================================================== */
-function verifyAdminCode() {
-  Swal.fire({
+async function verifyAdminCode() {
+  const result = await Swal.fire({
     title: 'เข้าสู่ระบบสำหรับผู้ดูแลระบบ',
     input: 'password',
     inputPlaceholder: 'กรอกรหัสผ่าน Admin',
     showCancelButton: true,
     confirmButtonText: 'ยืนยัน',
-    cancelButtonText: 'ยกเลิก'
-  }).then((result) => {
-    if (result.isConfirmed) {
-      if (result.value === "1234") { // เปลี่ยนรหัสผ่านตรงนี้ตามต้องการ
-        document.getElementById('mainAppContainer').style.display = 'none';
-        document.getElementById('dataTableContainer').style.display = 'block';
-        // เซ็ตวันที่บนแดชบอร์ดให้เป็นวันปัจจุบันเริ่มต้น
-        document.getElementById('summaryDate').value = new Date().toISOString().split('T')[0];
-      } else {
-        Swal.fire("ข้อผิดพลาด", "รหัสผ่านไม่ถูกต้อง", "error");
-      }
-    }
+    cancelButtonText: 'ยกเลิก',
+    confirmButtonColor: '#0d6efd',
+    cancelButtonColor: '#6c757d'
   });
+
+  // กดยกเลิก
+  if (!result.isConfirmed) return;
+
+  const password = result.value?.trim();
+
+  // ไม่กรอกรหัส
+  if (!password) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'กรุณากรอกรหัสผ่าน'
+    });
+    return;
+  }
+
+  try {
+    loadingSpinner.classList.add('show');
+
+    await gasCall('login', {
+      pwd: password
+    });
+
+    await Swal.fire({
+      icon: 'success',
+      title: 'เข้าสู่ระบบสำเร็จ',
+      text: 'ยินดีต้อนรับผู้ดูแลระบบ',
+      timer: 1800,
+      showConfirmButton: false
+    });
+
+    // ซ่อนหน้าหลัก
+    document.getElementById('mainAppContainer').style.display = 'none';
+
+    // แสดง Dashboard
+    document.getElementById('dataTableContainer').style.display = 'block';
+
+    // ตั้งค่าวันปัจจุบัน
+    document.getElementById('summaryDate').value =
+      new Date().toISOString().split('T')[0];
+
+    // โหลดข้อมูล Dashboard
+    loadDailySummary();
+
+  } catch (error) {
+
+    Swal.fire({
+      icon: 'error',
+      title: 'เข้าสู่ระบบไม่สำเร็จ',
+      text: error.message || 'เกิดข้อผิดพลาด'
+    });
+
+  } finally {
+
+    loadingSpinner.classList.remove('show');
+
+  }
 }
+
 
 function logoutAdmin() {
   document.getElementById('dataTableContainer').style.display = 'none';
