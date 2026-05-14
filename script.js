@@ -277,39 +277,101 @@ document.addEventListener('click', (e) => {
 /* ==========================================================================
    SUBMIT DATA SYSTEM
    ========================================================================== */
-submitBtn.addEventListener('click', async () => {
-  // Data Validation
-  if (!STATE.mode) return Swal.fire("แจ้งเตือน", "กรุณาเลือกโหมด 'เข้างาน' หรือ 'ออกงาน'", "warning");
-  if (!STATE.employeeName) return Swal.fire("แจ้งเตือน", "กรุณาเลือกชื่อ-นามสกุลของคุณ", "warning");
-  if (STATE.mode === 'in' && !STATE.location) return Swal.fire("แจ้งเตือน", "กรุณาเลือกสถานที่ปฏิบัติงาน", "warning");
-  if (!STATE.imageBlob) return Swal.fire("แจ้งเตือน", "กรุณาถ่ายภาพก่อนทำการบันทึกเวลา", "warning");
+submitButton.addEventListener('click', async () => {
 
-  loadingSpinner.classList.add('show');
+  // ตรวจสอบโหมด
+  if (!selectedMode) {
+    return Swal.fire({
+      icon: 'warning',
+      title: 'ยังไม่สมบูรณ์',
+      text: 'กรุณาเลือกโหมด "เข้างาน" หรือ "ออกงาน" ก่อน'
+    });
+  }
+
+  // ตรวจสอบชื่อ
+  if (!nameSelect.value) {
+    return Swal.fire({
+      icon: 'warning',
+      title: 'ยังไม่สมบูรณ์',
+      text: 'กรุณาเลือกชื่อ-สกุลของคุณ'
+    });
+  }
+
+  // ตรวจสอบสถานที่
+  if (selectedMode === 'in' && !selectedLocation) {
+    return Swal.fire({
+      icon: 'warning',
+      title: 'ยังไม่สมบูรณ์',
+      text: 'กรุณาเลือกสถานที่ปฏิบัติงาน'
+    });
+  }
+
+  // ตรวจสอบรูปภาพ
+  if (!imageCaptured) {
+    return Swal.fire({
+      icon: 'warning',
+      title: 'กรุณาถ่ายภาพก่อน',
+      text: 'โปรดถ่ายภาพเพื่อยืนยันตัวตนก่อนทำการบันทึกเวลา'
+    });
+  }
+
+  // ตรวจสอบ GPS
+  if (latitude === null || longitude === null) {
+    return Swal.fire({
+      icon: 'warning',
+      title: 'ไม่พบพิกัด',
+      text: 'ระบบกำลังรอข้อมูลตำแหน่ง GPS โปรดรอสักครู่'
+    });
+  }
 
   try {
-    // ส่งข้อมูลไปที่ Google Apps Script API
-    await gasCall('saveAttendance', STATE);
-    
+
+    showSpinner();
+
+    // เตรียมข้อมูล
+    const formData = {
+      name: nameSelect.value,
+      mode: selectedMode,
+      locationType: selectedLocation,
+      latitude,
+      longitude,
+      imageBase64: canvas.toDataURL('image/jpeg', 0.8),
+      imageType: 'image/jpeg',
+      imageName: `time_log_${Date.now()}.jpg`
+    };
+
+    // ส่งไป GAS API
+    const response = await gasCall(
+      'uploadImageAndSave',
+      formData
+    );
+
+    // แจ้งสำเร็จ
     await Swal.fire({
       icon: 'success',
-      title: 'บันทึกเวลาสำเร็จ',
-      text: `คุณ ${STATE.employeeName} ได้ลงเวลาเรียบร้อยแล้ว`,
-      timer: 2000
+      title: 'บันทึกสำเร็จ!',
+      text: response.message || 'บันทึกเวลาเรียบร้อย',
+      showConfirmButton: false,
+      timer: 2500
     });
 
-    // Reset Form State
-    STATE.imageBlob = null;
-    canvas.style.display = 'none';
-    video.style.display = 'block';
-    retakeBtn.style.display = 'none';
-    snapBtn.style.display = 'block';
-    getGeoLocation();
+    // reset form
+    resetForm();
 
-  } catch (err) {
-    Swal.fire("เกิดข้อผิดพลาด", "ไม่สามารถบันทึกข้อมูลได้: " + err.message, "error");
+  } catch (error) {
+
+    Swal.fire({
+      icon: 'error',
+      title: 'บันทึกไม่สำเร็จ',
+      text: error.message || 'เกิดข้อผิดพลาด'
+    });
+
   } finally {
-    loadingSpinner.classList.remove('show');
+
+    hideSpinner();
+
   }
+
 });
 
 /* ==========================================================================
