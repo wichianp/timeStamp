@@ -1,7 +1,7 @@
 /* ==========================================================================
    CONFIG & GLOBAL VARIABLES
    ========================================================================== */
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycby46XMPyPBIXOIeIAUY6CL4iShvFr1aE8y8zj3pml-8W2cdmf2IvFcc_DA69oonlqLP/exec";
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxh00-RpMFXSfTM8zx9MgpuN94UapZNrYb7vM0kxexqb1W7jvFgO4Kg3ArTJbo-suJW/exec";
 let EMPLOYEES = [];
 let PINNED_NAMES = JSON.parse(localStorage.getItem('pinnedEmployees') || '[]');
 
