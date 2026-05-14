@@ -316,6 +316,7 @@ submitBtn.addEventListener('click', async () => {
    ADMIN LOGIN & LOGOUT SYSTEM
    ========================================================================== */
 async function verifyAdminCode() {
+
   const result = await Swal.fire({
     title: 'เข้าสู่ระบบสำหรับผู้ดูแลระบบ',
     input: 'password',
@@ -342,12 +343,15 @@ async function verifyAdminCode() {
   }
 
   try {
+
     loadingSpinner.classList.add('show');
 
+    // ตรวจสอบรหัสผ่าน
     await gasCall('login', {
       pwd: password
     });
 
+    // แจ้งสำเร็จ
     await Swal.fire({
       icon: 'success',
       title: 'เข้าสู่ระบบสำเร็จ',
@@ -367,7 +371,7 @@ async function verifyAdminCode() {
       new Date().toISOString().split('T')[0];
 
     // โหลดข้อมูล Dashboard
-    loadDailySummary();
+    await loadDailySummary();
 
   } catch (error) {
 
@@ -383,7 +387,6 @@ async function verifyAdminCode() {
 
   }
 }
-
 
 function logoutAdmin() {
   document.getElementById('dataTableContainer').style.display = 'none';
