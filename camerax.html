@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <title>ระบบลงเวลา (Professional Design)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">
+        <i class="fas fa-fingerprint"></i>
+        <span>ระบบลงเวลา</span>
+      </a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item">
+            <button class="btn btn-custom" type="button" onclick="verifyAdminCode()">
+              <i class="fas fa-list-alt"></i>
+              <span>Admin</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div id="loadingSpinner" class="spinner-overlay">
+    <i class="fas fa-spinner"></i>
+    <span>กำลังประมวลผล กรุณารอสักครู่...</span>
+  </div>
+
+  <main class="app-wrapper">
+    <div class="app-grid-container" id="mainAppContainer">
+      <section class="card-panel action-column">
+        <div class="clock-display">
+          <div id="current-time-large"></div>
+          <div id="current-date-small"></div>
+        </div>
+
+        <div class="camera-section">
+          <video id="video" autoplay playsinline muted></video>
+          <canvas id="canvas" style="display: none;"></canvas>
+
+          <div class="camera-buttons">
+            <button id="snap" type="button" class="action-button">
+              <i class="fas fa-camera"></i> ถ่ายภาพ
+            </button>
+            <button id="retake" type="button" class="action-button" style="display: none;">
+              <i class="fas fa-redo-alt"></i> ถ่ายใหม่
+            </button>
+            <button id="switchCamera" type="button" class="action-button">
+              <i class="fas fa-sync-alt"></i> สลับกล้อง
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card-panel form-column">
+        <div class="section-title">
+          <h2>
+            <i class="fas fa-list-check"></i>
+            ขั้นตอนการลงเวลา
+          </h2>
+        </div>
+
+        <div>
+          <label class="form-step-label">
+            <span class="step-number">1</span>
+            <span>เลือกโหมดการลงเวลา</span>
+          </label>
+          <div class="mode-buttons">
+            <button id="mode-in" data-mode="in" type="button" class="choice-button">
+              <i class="fas fa-sign-in-alt"></i> เข้างาน
+            </button>
+            <button id="mode-out" data-mode="out" type="button" class="choice-button">
+              <i class="fas fa-sign-out-alt"></i> ออกงาน
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label for="nameSearch" class="form-step-label">
+            <span class="step-number">2</span>
+            <span>เลือกชื่อ-สกุล</span>
+          </label>
+
+          <div id="quickChips" class="d-flex flex-wrap gap-2 mb-2"></div>
+
+          <div class="position-relative">
+            <input
+              id="nameSearch"
+              type="text"
+              class="form-control"
+              autocomplete="off"
+              placeholder="พิมพ์เพื่อค้นหา เช่น ชื่อ หรือ นามสกุล">
+            <div
+              id="nameDropdown"
+              class="dropdown-menu show w-100 shadow-sm"
+              style="max-height:280px; overflow:auto; display:none;">
+            </div>
+          </div>
+
+          <select id="name" class="form-select mt-2" style="display:none;">
+            <option value="" disabled selected>-- กรุณาเลือก --</option>
+          </select>
+        </div>
+
+        <div id="locationSection" class="hidden">
+          <label class="form-step-label">
+            <span class="step-number">3</span>
+            <span>สถานที่ปฏิบัติงาน</span>
+          </label>
+          <div class="location-options">
+            <button
+              type="button"
+              class="location-button choice-button"
+              data-value="ปฎิบัติงานในโรงเรียน">
+              <i class="fas fa-desktop"></i> ในโรงเรียน
+            </button>
+            <button
+              type="button"
+              class="location-button choice-button"
+              data-value="ปฎิบัติงานนอกโรงเรียน">
+              <i class="fas fa-car-alt"></i> นอกโรงเรียน
+            </button>
+          </div>
+        </div>
+
+        <div class="info-box mt-1">
+          <p>
+            <i class="fas fa-calendar-alt"></i>
+            <strong>วันที่</strong> <span id="infoDate">--</span>
+          </p>
+          <p>
+            <i class="fas fa-map-marker-alt"></i>
+            <strong>พิกัด GPS</strong>
+            <span id="lat">--</span>, <span id="lng">--</span>
+          </p>
+        </div>
+
+        <div class="mt-auto pt-1">
+          <button id="submit" type="button" class="action-button">
+            <i class="fas fa-paper-plane"></i> บันทึกเวลา
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <section id="dataTableContainer" class="card-admin mt-4" style="display: none; max-width: 100%; margin-inline: auto; padding: 1rem 1.25rem;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+          <h5 class="mb-0 d-flex align-items-center gap-2">
+            <i class="fas fa-database text-primary"></i>
+            <span>ข้อมูลการลงเวลา</span>
+          </h5>
+          <button class="btn-admin btn-danger btn-sm rounded-pill" type="button" onclick="logoutAdmin()">
+            <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+          </button>
+        </div>
+
+        <div class="dashboard-container">
+          <header class="page-header no-print">
+            <div class="page-header-left">
+              <h1><i class="fas fa-tachometer-alt"></i> แดชบอร์ดรายวัน</h1>
+              <div class="page-header-subtitle"> สรุปสถานะการลงเวลาทำงานแบบเรียลไทม์ และค้นหาข้อมูลรายบุคคล </div>
+            </div>
+            <div class="filters-container">
+              <label for="summaryDate" title="เลือกวันที่สรุป"><i class="fas fa-calendar-alt"></i></label>
+              <input type="date" id="summaryDate">
+              <button class="btn-admin" type="button" onclick="loadDailySummary()">
+                <i class="fas fa-sync-alt"></i> โหลดข้อมูล
+              </button>
+              <button class="btn-admin btn-print" type="button" onclick="printDailyReport()">
+                <i class="fas fa-print"></i> พิมพ์รายวัน
+              </button>
+            </div>
+          </header>
+          
+          </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
