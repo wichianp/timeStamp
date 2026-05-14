@@ -332,7 +332,7 @@ async function verifyAdminCode() {
   if (!result.isConfirmed) return;
 
   const password = result.value?.trim();
-
+  console.log(password)
   // ไม่กรอกรหัส
   if (!password) {
     Swal.fire({
